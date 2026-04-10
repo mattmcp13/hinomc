@@ -1,23 +1,22 @@
 /* ============================================================
    HINOMC — main.js
-   Mobile nav, event date badges
+   Scroll animations, mobile nav, event badges, active nav
    ============================================================ */
 
 (function () {
   'use strict';
 
   // --- Mobile Navigation Toggle ---
-  const toggle = document.querySelector('.nav-toggle');
-  const navLinks = document.querySelector('.nav-links');
+  var toggle = document.querySelector('.nav-toggle');
+  var navLinks = document.querySelector('.nav-links');
 
   if (toggle && navLinks) {
     toggle.addEventListener('click', function () {
-      const expanded = this.getAttribute('aria-expanded') === 'true';
+      var expanded = this.getAttribute('aria-expanded') === 'true';
       this.setAttribute('aria-expanded', String(!expanded));
       navLinks.classList.toggle('open');
     });
 
-    // Close mobile nav when a link is clicked
     navLinks.querySelectorAll('a').forEach(function (link) {
       link.addEventListener('click', function () {
         toggle.setAttribute('aria-expanded', 'false');
@@ -55,15 +54,68 @@
 
   updateEventBadges();
 
-  // --- Shrink header on scroll ---
+  // --- Header scroll effect ---
   var header = document.querySelector('.site-header');
   if (header) {
     window.addEventListener('scroll', function () {
       if (window.scrollY > 50) {
-        header.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.3)';
+        header.classList.add('scrolled');
       } else {
-        header.style.boxShadow = 'none';
+        header.classList.remove('scrolled');
       }
+    }, { passive: true });
+  }
+
+  // --- Scroll-triggered reveal animations ---
+  var animatedEls = document.querySelectorAll('[data-animate]');
+
+  if (animatedEls.length > 0 && 'IntersectionObserver' in window) {
+    var revealObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.12,
+      rootMargin: '0px 0px -40px 0px'
+    });
+
+    animatedEls.forEach(function (el) {
+      revealObserver.observe(el);
+    });
+  } else {
+    // Fallback: show everything immediately
+    animatedEls.forEach(function (el) {
+      el.classList.add('is-visible');
+    });
+  }
+
+  // --- Active nav link on scroll ---
+  var sections = document.querySelectorAll('section[id]');
+  var navAnchors = document.querySelectorAll('.nav-links a:not(.nav-cta)');
+
+  if (sections.length > 0 && navAnchors.length > 0) {
+    var sectionObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          var id = entry.target.getAttribute('id');
+          navAnchors.forEach(function (a) {
+            a.classList.remove('active');
+            if (a.getAttribute('href') === '#' + id) {
+              a.classList.add('active');
+            }
+          });
+        }
+      });
+    }, {
+      threshold: 0,
+      rootMargin: '-30% 0px -65% 0px'
+    });
+
+    sections.forEach(function (section) {
+      sectionObserver.observe(section);
     });
   }
 })();
