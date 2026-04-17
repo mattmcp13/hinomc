@@ -60,6 +60,7 @@
     window.addEventListener('scroll', function () {
       if (window.scrollY > 50) {
         header.classList.add('scrolled');
+        document.body.classList.add('has-scrolled');
       } else {
         header.classList.remove('scrolled');
       }
